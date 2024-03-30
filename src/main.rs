@@ -1,30 +1,31 @@
 mod color;
+mod hittable;
+mod objects;
 mod ray;
 mod vec3;
 
 use std::io;
 
+use hittable::Hittable;
+
 use crate::color::{write_color, Color};
+use crate::objects::Sphere;
 use crate::ray::Ray;
 use crate::vec3::{Point, Vec3};
 
 fn ray_color(ray: Ray) -> Color {
-    if hit_sphere(Point::new(0.0, 4.0, -10.0), 1.0, ray) {
-        return Color::new(1.0, 0.0, 0.0);
+    let sphere = Sphere::new(Point::new(0.0, 3.0, -5.0), 1.0);
+    if let Some(hit_record) = sphere.hit(ray, 0.0, 10000000.0) {
+        return 0.5
+            * Color::new(
+                hit_record.normal.x + 1.0,
+                hit_record.normal.y + 1.0,
+                hit_record.normal.z + 1.0,
+            );
     }
 
     let y = 0.5 * (ray.direction.unit().y + 1.0);
     Color::new(1.0, 1.0, 1.0) * (1.0 - y) + Color::new(0.5, 0.7, 1.0) * y
-}
-
-fn hit_sphere(center: Point, radius: f64, ray: Ray) -> bool {
-    let oc = ray.orig - center;
-    let a = ray.direction.length().powf(2.0);
-    let b = 2.0 * Vec3::dot(ray.direction, oc);
-    let c = oc.length().powf(2.0) - radius.powf(2.0);
-
-    let discriminant = b * b - 4.0 * a * c;
-    discriminant >= 0.0
 }
 
 fn main() {
