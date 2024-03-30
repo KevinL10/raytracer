@@ -5,19 +5,29 @@ mod vec3;
 use std::io;
 
 use crate::color::{write_color, Color};
-use crate::vec3::{Point, Vec3};
 use crate::ray::Ray;
-
+use crate::vec3::{Point, Vec3};
 
 fn ray_color(ray: Ray) -> Color {
+    if hit_sphere(Point::new(0.0, 4.0, -10.0), 1.0, ray) {
+        return Color::new(1.0, 0.0, 0.0);
+    }
+
     let y = 0.5 * (ray.direction.unit().y + 1.0);
     Color::new(1.0, 1.0, 1.0) * (1.0 - y) + Color::new(0.5, 0.7, 1.0) * y
 }
 
-fn main() {
-    // let image_height = 256;
-    // let image_width = 256;
+fn hit_sphere(center: Point, radius: f64, ray: Ray) -> bool {
+    let oc = ray.orig - center;
+    let a = ray.direction.length().powf(2.0);
+    let b = 2.0 * Vec3::dot(ray.direction, oc);
+    let c = oc.length().powf(2.0) - radius.powf(2.0);
 
+    let discriminant = b * b - 4.0 * a * c;
+    discriminant >= 0.0
+}
+
+fn main() {
     // aspect ratio: width / height;
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
@@ -47,10 +57,6 @@ fn main() {
     for i in 0..image_height {
         // eprintln!("Scanlines remaining: {}", image_height - i);
         for j in 0..image_width {
-            let r = j as f64 / (image_width as f64 - 1.0);
-            let g = i as f64 / (image_height as f64 - 1.0);
-            let b = 0f64;
-
             let pixel_center = pixel00_loc + pixel_delta_u * j + pixel_delta_v * i;
             let ray_direction = pixel_center - camera_center;
 
