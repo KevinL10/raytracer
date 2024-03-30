@@ -1,11 +1,13 @@
-use std::ops::{Add, Div, Mul};
+use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Sub};
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,
     pub z: f64,
 }
+
+pub use Vec3 as Point;
 
 impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
@@ -14,6 +16,10 @@ impl Vec3 {
 
     pub fn length(&self) -> f64 {
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
+    }
+
+    pub fn unit(&self) -> Self {
+        *self / self.length()
     }
 
     pub fn dot(v: Vec3, u: Vec3) -> f64 {
@@ -25,16 +31,37 @@ impl Vec3 {
     }
 }
 
-
+// Implement simple addition/multiplication/etc operations for Vec3
+// TODO: clean up impls below
 impl Add for Vec3 {
     type Output = Vec3;
 
-    fn add(self, other: Vec3) -> Vec3 {
+    fn add(self, other: Self) -> Self::Output {
         Vec3 {
             x: self.x + other.x,
             y: self.y + other.y,
             z: self.z + other.z,
         }
+    }
+}
+
+impl Sub for Vec3 {
+    type Output = Vec3;
+
+    fn sub(self, other: Self) -> Self::Output {
+        Vec3 {
+            x: self.x - other.x,
+            y: self.y - other.y,
+            z: self.z - other.z,
+        }
+    }
+}
+
+impl Mul<i32> for Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, scalar: i32) -> Self::Output {
+        self * (scalar as f64)
     }
 }
 
@@ -53,7 +80,7 @@ impl Mul<f64> for Vec3 {
 impl Mul for Vec3 {
     type Output = Vec3;
 
-    fn mul(self, other: Vec3) -> Self::Output {
+    fn mul(self, other: Self) -> Self::Output {
         Vec3 {
             x: self.x * other.x,
             y: self.y * other.y,
@@ -69,6 +96,15 @@ impl Div<f64> for Vec3 {
         self * (1.0 / scalar)
     }
 }
+
+impl Mul<Vec3> for f64 {
+    type Output = Vec3;
+
+    fn mul(self, other: Vec3) -> Self::Output {
+       other * self 
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -90,6 +126,8 @@ mod tests {
         let v1 = Vec3::new(1.0, -5.0, 10.0);
         let v2 = Vec3::new(-4.0, 9.0, 1.0);
         let v3 = v1 + v2;
+        assert_double_eq(v1.x, 1.0);
+        assert_double_eq(v2.y, 9.0);
         assert_double_eq(v3.x, -3.0);
         assert_double_eq(v3.y, 4.0);
         assert_double_eq(v3.z, 11.0);

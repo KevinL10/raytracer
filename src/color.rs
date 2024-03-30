@@ -1,8 +1,8 @@
 use std::io;
 
-use crate::vec3::Vec3;
+pub use crate::vec3::Vec3;
 
-use Vec3 as Color;
+pub use Vec3 as Color;
 
 pub fn write_color<T: io::Write>(mut out: T, pixel: Color) {
     let r = (255.999 * pixel.x) as u8;
