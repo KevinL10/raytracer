@@ -1,4 +1,5 @@
 use crate::hittable::{HitRecord, Hittable};
+use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::vec3::{Point, Vec3};
 
@@ -14,7 +15,7 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: Ray, ray_t: Interval) -> Option<HitRecord> {
         let oc = ray.orig - self.center;
         let a = ray.direction.length().powf(2.0);
         let b = Vec3::dot(ray.direction, oc);
@@ -29,18 +30,16 @@ impl Hittable for Sphere {
         let t1 = (-b - discriminant.sqrt()) / a;
         let t2 = (-b + discriminant.sqrt()) / a;
 
-        let t = if t_min <= t1 && t1 <= t_max {
+        let t = if ray_t.surrounds(t1) {
             t1
-        } else if t_min <= t2 && t2 <= t_max {
+        } else if ray_t.surrounds(t2) {
             t2
         } else {
             return None;
         };
 
-        Some(HitRecord {
-            t,
-            point: ray.at(t),
-            normal: (ray.at(t) - self.center) / self.radius,
-        })
+        let point = ray.at(t);
+        let outward_normal = (point - self.center) / self.radius;
+        Some(HitRecord::new(point, outward_normal, ray, t))
     }
 }

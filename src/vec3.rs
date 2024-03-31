@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Sub};
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub struct Vec3 {
@@ -23,11 +23,15 @@ impl Vec3 {
     }
 
     pub fn dot(v: Vec3, u: Vec3) -> f64 {
-        return v.x * u.x + v.y * u.y + v.z * u.z
+        return v.x * u.x + v.y * u.y + v.z * u.z;
     }
 
     pub fn cross(v: Vec3, u: Vec3) -> Vec3 {
-        Vec3::new(v.y * u.z - v.z * u.y, v.z * u.x - v.x * u.z, v.x * u.y - v.y * u.x)
+        Vec3::new(
+            v.y * u.z - v.z * u.y,
+            v.z * u.x - v.x * u.z,
+            v.x * u.y - v.y * u.x,
+        )
     }
 }
 
@@ -97,14 +101,21 @@ impl Div<f64> for Vec3 {
     }
 }
 
+impl Neg for Vec3 {
+    type Output = Vec3;
+
+    fn neg(self) -> Self::Output {
+        self * -1.0
+    }
+}
+
 impl Mul<Vec3> for f64 {
     type Output = Vec3;
 
     fn mul(self, other: Vec3) -> Self::Output {
-       other * self 
+        other * self
     }
 }
-
 
 #[cfg(test)]
 mod tests {
