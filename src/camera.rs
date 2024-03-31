@@ -15,6 +15,7 @@ pub struct Camera {
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
     samples_per_pixel: i32,
+    max_depth: i32,
 }
 
 impl Camera {
@@ -24,6 +25,7 @@ impl Camera {
         focal_length: f64,
         viewport_height: f64,
         samples_per_pixel: i32,
+        max_depth: i32,
     ) -> Self {
         let image_height = ((image_width as f64) / aspect_ratio) as i32;
 
@@ -54,6 +56,7 @@ impl Camera {
             pixel_delta_u,
             pixel_delta_v,
             samples_per_pixel,
+            max_depth,
         }
     }
 
@@ -66,7 +69,7 @@ impl Camera {
                 let mut agg_pixel_color = Color::new(0.0, 0.0, 0.0);
                 for _ in 0..self.samples_per_pixel {
                     let ray = self.get_ray(i, j);
-                    agg_pixel_color += Camera::ray_color(ray, world);
+                    agg_pixel_color += Camera::ray_color(ray, self.max_depth, world);
                 }
 
                 write_color(io::stdout(), agg_pixel_color, self.samples_per_pixel);
@@ -76,9 +79,18 @@ impl Camera {
         eprintln!("Finished.");
     }
 
-    fn ray_color(ray: Ray, world: &dyn Hittable) -> Color {
-        if let Some(hit_record) = world.hit(ray, Interval::new(0.0, INFINITY)) {
-            return 0.5 * (hit_record.normal + Vec3::new(1.0, 1.0, 1.0));
+    fn ray_color(ray: Ray, depth: i32, world: &dyn Hittable) -> Color {
+        if depth <= 0 {
+            return Color::new(0.0, 0.0, 0.0);
+        }
+
+        if let Some(hit_record) = world.hit(ray, Interval::new(0.001, INFINITY)) {
+            return 0.5
+                * Camera::ray_color(
+                    Ray::new(hit_record.point, hit_record.normal),
+                    depth - 1,
+                    world,
+                );
         };
 
         let y = 0.5 * (ray.direction.unit().y + 1.0);
