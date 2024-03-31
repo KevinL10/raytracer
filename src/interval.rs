@@ -9,6 +9,7 @@ impl Interval {
         Self { min, max }
     }
 
+    #[allow(dead_code)]
     pub fn contains(&self, t: f64) -> bool {
         self.min <= t && t <= self.max
     }

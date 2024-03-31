@@ -26,6 +26,8 @@ impl HittableList {
 
 impl Hittable for HittableList {
     fn hit(&self, ray: Ray, ray_t: Interval) -> Option<HitRecord> {
+        // TODO: fold over current closest point instead of checking
+        // hit on the entire original interval
         self.objects
             .iter()
             .map(|object| object.hit(ray, ray_t))
