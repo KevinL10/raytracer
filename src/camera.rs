@@ -14,10 +14,17 @@ pub struct Camera {
     pixel00_loc: Point,
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
+    samples_per_pixel: i32,
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: i32, focal_length: f64, viewport_height: f64) -> Self {
+    pub fn new(
+        aspect_ratio: f64,
+        image_width: i32,
+        focal_length: f64,
+        viewport_height: f64,
+        samples_per_pixel: i32,
+    ) -> Self {
         let image_height = ((image_width as f64) / aspect_ratio) as i32;
 
         // setup camera / viewport
@@ -46,6 +53,7 @@ impl Camera {
             pixel00_loc,
             pixel_delta_u,
             pixel_delta_v,
+            samples_per_pixel,
         }
     }
 
@@ -55,13 +63,13 @@ impl Camera {
         for i in 0..self.image_height {
             // eprintln!("Scanlines remaining: {}", image_height - i);
             for j in 0..self.image_width {
-                let pixel_center =
-                    self.pixel00_loc + self.pixel_delta_u * j + self.pixel_delta_v * i;
-                let ray_direction = pixel_center - self.center;
+                let mut agg_pixel_color = Color::new(0.0, 0.0, 0.0);
+                for _ in 0..self.samples_per_pixel {
+                    let ray = self.get_ray(i, j);
+                    agg_pixel_color += Camera::ray_color(ray, world);
+                }
 
-                let ray = Ray::new(self.center, ray_direction);
-                let color = Camera::ray_color(ray, world);
-                write_color(io::stdout(), color);
+                write_color(io::stdout(), agg_pixel_color, self.samples_per_pixel);
             }
         }
 
@@ -75,5 +83,17 @@ impl Camera {
 
         let y = 0.5 * (ray.direction.unit().y + 1.0);
         Color::new(1.0, 1.0, 1.0) * (1.0 - y) + Color::new(0.5, 0.7, 1.0) * y
+    }
+
+    fn get_ray(&self, i: i32, j: i32) -> Ray {
+        // Return a ray to a random point within the square surrounding the (i, j)'th pixel
+        let pixel_center = self.pixel00_loc + self.pixel_delta_u * j + self.pixel_delta_v * i;
+        let pixel_sample = pixel_center
+            + (-0.5 + rand::random::<f64>()) * self.pixel_delta_u
+            + (-0.5 + rand::random::<f64>()) * self.pixel_delta_v;
+
+        let ray_direction = pixel_sample + self.center;
+
+        Ray::new(self.center, ray_direction)
     }
 }

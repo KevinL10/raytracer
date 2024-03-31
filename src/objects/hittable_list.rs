@@ -19,6 +19,7 @@ impl HittableList {
         self.objects.push(Rc::clone(&hittable));
     }
 
+    #[allow(dead_code)]
     pub fn clear(&mut self) {
         self.objects.clear();
     }

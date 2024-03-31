@@ -17,9 +17,12 @@ fn main() {
     // aspect ratio: width / height;
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
+
+    // camera settings
     let focal_length = 1.0;
     let viewport_height = 2.0;
-    let camera = Camera::new(aspect_ratio, image_width, focal_length, viewport_height);
+    let samples_per_pixel = 10;
+    let camera = Camera::new(aspect_ratio, image_width, focal_length, viewport_height, samples_per_pixel);
 
     // create world
     let mut world = HittableList::new();
