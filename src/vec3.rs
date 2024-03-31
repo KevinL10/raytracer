@@ -1,5 +1,5 @@
 use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
-use rand::{random, Rng};
+use rand::Rng;
 
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub struct Vec3 {
@@ -144,7 +144,11 @@ impl Mul<Vec3> for f64 {
 }
 
 // useful functions
-fn random_in_unit_sphere() -> Vec3{
+
+// note: we first sample points from within the sphere and then 
+// normalize them. We do this to avoid oversampling from points 
+// toward the "corners" of the sphere (~ 45 degrees). 
+pub fn random_in_unit_sphere() -> Vec3{
     loop {
         let p = Vec3::random_range(-1.0, 1.0);
         if p.length() < 1.0 {
@@ -153,6 +157,7 @@ fn random_in_unit_sphere() -> Vec3{
     }
 }
 
+#[allow(dead_code)]
 pub fn random_on_hemisphere(normal: Vec3) -> Vec3 {
     let on_unit_sphere = random_in_unit_sphere().unit();
     if Vec3::dot(on_unit_sphere, normal) > 0.0 {

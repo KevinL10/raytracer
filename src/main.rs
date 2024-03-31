@@ -21,7 +21,7 @@ fn main() {
     // camera settings
     let focal_length = 1.0;
     let viewport_height = 2.0;
-    let samples_per_pixel = 100;
+    let samples_per_pixel = 20;
     // max number of ray bounces
     let max_depth = 10;
     let camera = Camera::new(aspect_ratio, image_width, focal_length, viewport_height, samples_per_pixel, max_depth);

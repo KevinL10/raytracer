@@ -2,7 +2,7 @@ use crate::color::{write_color, Color};
 use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::ray::Ray;
-use crate::vec3::{random_on_hemisphere, Point, Vec3};
+use crate::vec3::{random_in_unit_sphere, random_on_hemisphere, Point, Vec3};
 
 use std::f64::INFINITY;
 use std::io;
@@ -85,7 +85,8 @@ impl Camera {
         }
 
         if let Some(hit_record) = world.hit(ray, Interval::new(0.001, INFINITY)) {
-            let direction = random_on_hemisphere(hit_record.normal);
+            // let direction = random_on_hemisphere(hit_record.normal);
+            let direction = hit_record.normal + random_in_unit_sphere().unit();
             return 0.5
                 * Camera::ray_color(
                     Ray::new(hit_record.point, direction),
