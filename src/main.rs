@@ -5,13 +5,16 @@ mod interval;
 mod objects;
 mod ray;
 mod vec3;
+mod material;
 
 use std::rc::Rc;
 
+use crate::material::{Material, Metal, Lambertian};
 use crate::camera::Camera;
 use crate::objects::HittableList;
 use crate::objects::Sphere;
 use crate::vec3::Point;
+use crate::color::Color;
 
 fn main() {
     // aspect ratio: width / height;
@@ -21,16 +24,26 @@ fn main() {
     // camera settings
     let focal_length = 1.0;
     let viewport_height = 2.0;
-    let samples_per_pixel = 20;
+    let samples_per_pixel = 30;
     // max number of ray bounces
     let max_depth = 10;
     let camera = Camera::new(aspect_ratio, image_width, focal_length, viewport_height, samples_per_pixel, max_depth);
 
-    // create world
+    // create materials
+    let red: Rc<dyn Material> = Rc::new(Lambertian::new(Color::new(0.9, 0.1, 0.1)));
+    let ground: Rc<dyn Material> = Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
+    let left: Rc<dyn Material> = Rc::new(Metal::new(Color::new(0.8, 0.8, 0.8), 0.2));
+    let right: Rc<dyn Material> = Rc::new(Lambertian::new(Color::new(0.9, 0.1, 0.8)));
+
+    let high: Rc<dyn Material> = Rc::new(Metal::new(Color::new(0.8, 0.8, 0.8), 0.1));
+
+    // create objects 
     let mut world = HittableList::new();
-    world.add(Rc::new(Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5)));
-    world.add(Rc::new(Sphere::new(Point::new(2.0, 2.0, -5.0), 0.5)));
-    world.add(Rc::new(Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0)));
+    world.add(Rc::new(Sphere::new(Point::new(0.0, 0.0, -1.0), 0.5, Rc::clone(&red))));
+    world.add(Rc::new(Sphere::new(Point::new(-1.0, 0.0, -1.0), 0.5, Rc::clone(&left))));
+    world.add(Rc::new(Sphere::new(Point::new(1.0, 0.0, -1.0), 0.5, Rc::clone(&right))));
+    world.add(Rc::new(Sphere::new(Point::new(3.0, 3.0, -5.0), 1.0, Rc::clone(&high))));
+    world.add(Rc::new(Sphere::new(Point::new(0.0, -100.5, -1.0), 100.0, Rc::clone(&ground))));
 
     camera.render(&world);
 }

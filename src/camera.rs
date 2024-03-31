@@ -2,7 +2,7 @@ use crate::color::{write_color, Color};
 use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::ray::Ray;
-use crate::vec3::{random_in_unit_sphere, random_on_hemisphere, Point, Vec3};
+use crate::vec3::{Point, Vec3};
 
 use std::f64::INFINITY;
 use std::io;
@@ -64,7 +64,7 @@ impl Camera {
         println!("P3\n{} {}\n255", self.image_width, self.image_height);
 
         for i in 0..self.image_height {
-            // eprintln!("Scanlines remaining: {}", image_height - i);
+            eprintln!("Scanlines remaining: {}", self.image_height - i);
             for j in 0..self.image_width {
                 let mut agg_pixel_color = Color::new(0.0, 0.0, 0.0);
                 for _ in 0..self.samples_per_pixel {
@@ -85,14 +85,13 @@ impl Camera {
         }
 
         if let Some(hit_record) = world.hit(ray, Interval::new(0.001, INFINITY)) {
-            // let direction = random_on_hemisphere(hit_record.normal);
-            let direction = hit_record.normal + random_in_unit_sphere().unit();
-            return 0.5
-                * Camera::ray_color(
-                    Ray::new(hit_record.point, direction),
-                    depth - 1,
-                    world,
-                );
+            // propagate the light ray if the ray is scattered. otherwise,
+            // the material absorbs all of the light, and the color is black.
+            if let Some(scattered_ray) = hit_record.material.scatter(ray, &hit_record) {
+                return scattered_ray.attenuation
+                    * Camera::ray_color(scattered_ray.ray, depth - 1, world);
+            }
+            return Color::new(0.0, 0.0, 0.0);
         };
 
         let y = 0.5 * (ray.direction.unit().y + 1.0);
