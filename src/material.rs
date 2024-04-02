@@ -1,3 +1,5 @@
+use rand::seq::index;
+
 use crate::color::Color;
 use crate::hittable::HitRecord;
 use crate::ray::{Ray, ScatteredRay};
@@ -70,16 +72,18 @@ impl Material for Metal {
 }
 
 pub struct Dielectric {
-    ref_index: f64,
+    ir: f64,
 }
 
 impl Dielectric {
-    pub fn new(ref_index: f64) -> Self {
+    pub fn new(index_of_refraction: f64) -> Self {
         Self {
-            ref_index
+            ir: index_of_refraction 
         }
     }
 
+    // note: Shlick's approximation takes in the *relative* ratio of 
+    // refraction instead of the absolute index
     fn reflectance(cosine: f64, ref_index: f64) -> f64 {
         let r0 = ((1.0 - ref_index) / (1.0 + ref_index)).powf(2.0);
         r0 + (1.0 - r0) * (1.0 - cosine).powf(5.0)
@@ -90,15 +94,15 @@ impl Material for Dielectric {
 
     fn scatter(&self, ray: Ray, hit_record: &HitRecord) -> Option<ScatteredRay> {
         // when the ray intersects on the front face, the ratio will be
-        // that of outside air (1.0) to the material (self.ref_index)
+        // that of outside air (1.0) to the material (self.ir)
         let unit_direction = ray.direction.unit();
         let cos_theta = Vec3::dot(unit_direction, -hit_record.normal);
         let sin_theta = (1.0 - cos_theta.powf(2.0)).sqrt();
 
         let refraction_ratio = if hit_record.front_face {
-            1.0 / self.ref_index
+            1.0 / self.ir
         } else {
-            self.ref_index
+            self.ir
         };
 
         // if the incident angle exceeds the critical angle, the ray will
@@ -106,8 +110,7 @@ impl Material for Dielectric {
         // with probability given by Shlick's approximation
         let cannot_refract = sin_theta * refraction_ratio > 1.0;
 
-        let direction = if cannot_refract || (Dielectric::reflectance(cos_theta, self.ref_index) > rand::random()) {
-            // eprintln!("reflected");
+        let direction = if cannot_refract || (Dielectric::reflectance(cos_theta, refraction_ratio) > rand::random()) {
             reflect(unit_direction, hit_record.normal)
         } else {
             refract(unit_direction, hit_record.normal, refraction_ratio)

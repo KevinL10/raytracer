@@ -16,36 +16,55 @@ pub struct Camera {
     pixel_delta_v: Vec3,
     samples_per_pixel: i32,
     max_depth: i32,
+
+    // camera orthonormal basis
+    u: Vec3,
+    v: Vec3,
+    w: Vec3,
 }
 
 impl Camera {
     pub fn new(
         aspect_ratio: f64,
         image_width: i32,
-        focal_length: f64,
-        viewport_height: f64,
+        vfov: f64,
         samples_per_pixel: i32,
         max_depth: i32,
+
     ) -> Self {
         let image_height = ((image_width as f64) / aspect_ratio) as i32;
 
-        // setup camera / viewport
+        // setup camera
+        let lookfrom = Point::new(-2.0,2.0,1.0);
+        let lookat = Point::new(0.0,0.0,-1.0);
+        let vup = Vec3::new(0.0, 1.0, 0.0);
+
+        let focal_length = (lookfrom - lookat).length();
+        let w = (lookfrom - lookat).unit();
+        let u = Vec3::cross(vup, w).unit();
+        let v = Vec3::cross(w, u).unit();
+
+
+        // setup viewport
+        // tan(theta / 2) = h / focal_length
+        let h = (vfov.to_radians() / 2.0).tan() * focal_length;
+        let viewport_height = 2.0 * h;
         let viewport_width = viewport_height * (image_width as f64) / (image_height as f64);
         eprintln!(
             "viewport: height={}, width={}",
             viewport_height, viewport_width
         );
 
-        let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
-        let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
+        let viewport_u = viewport_width * u;
+        let viewport_v = viewport_height * -v; // viewport_v should point downward
 
         let pixel_delta_u = viewport_u / (image_width as f64);
         let pixel_delta_v = viewport_v / (image_height as f64);
 
         // compute camera center and upper-left pixel positions
-        let center = Point::new(0.0, 0.0, 0.0);
+        let center = lookfrom;
         let viewport_upper_left =
-            center - (viewport_u / 2.0) - (viewport_v / 2.0) - Vec3::new(0.0, 0.0, focal_length);
+            center - (viewport_u / 2.0) - (viewport_v / 2.0) - focal_length * w;
         let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
         Self {
@@ -57,6 +76,9 @@ impl Camera {
             pixel_delta_v,
             samples_per_pixel,
             max_depth,
+            u,
+            v,
+            w
         }
     }
 
