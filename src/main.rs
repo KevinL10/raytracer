@@ -95,9 +95,9 @@ fn basic_world() {
 fn book_cover() {
     let mut world = HittableList::new();
     world.add(Rc::new(Sphere::new(
-        Point::new(0.0, 1.0, 0.0),
-        1.0,
-        Rc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5))),
+        Point::new(0.0, -1000.0, 0.0),
+        1000.0,
+        Rc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5))),
     )));
 
     for a in -11..=11 {
@@ -157,8 +157,7 @@ fn book_cover() {
 
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 1200;
-    // let samples_per_pixel = 500;
-    let samples_per_pixel = 10;
+    let samples_per_pixel = 500;
     let max_depth = 50;
 
     let vfov = 20.0;
