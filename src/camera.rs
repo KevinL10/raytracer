@@ -2,7 +2,7 @@ use crate::color::{write_color, Color};
 use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::ray::Ray;
-use crate::vec3::{Point, Vec3};
+use crate::vec3::{random_in_unit_disk, Point, Vec3};
 
 use std::f64::INFINITY;
 use std::io;
@@ -17,10 +17,9 @@ pub struct Camera {
     samples_per_pixel: i32,
     max_depth: i32,
 
-    // camera orthonormal basis
-    u: Vec3,
-    v: Vec3,
-    w: Vec3,
+    defocus_angle: f64,
+    defocus_disk_u: Vec3,
+    defocus_disk_v: Vec3,
 }
 
 impl Camera {
@@ -30,24 +29,22 @@ impl Camera {
         vfov: f64,
         samples_per_pixel: i32,
         max_depth: i32,
-
+        lookfrom: Point,
+        lookat: Point,
+        vup: Vec3,
+        defocus_angle: f64,
+        focus_dist: f64,
     ) -> Self {
         let image_height = ((image_width as f64) / aspect_ratio) as i32;
 
         // setup camera
-        let lookfrom = Point::new(-2.0,2.0,1.0);
-        let lookat = Point::new(0.0,0.0,-1.0);
-        let vup = Vec3::new(0.0, 1.0, 0.0);
-
-        let focal_length = (lookfrom - lookat).length();
         let w = (lookfrom - lookat).unit();
         let u = Vec3::cross(vup, w).unit();
         let v = Vec3::cross(w, u).unit();
 
-
         // setup viewport
-        // tan(theta / 2) = h / focal_length
-        let h = (vfov.to_radians() / 2.0).tan() * focal_length;
+        // tan(theta / 2) = h / focus_dist
+        let h = (vfov.to_radians() / 2.0).tan() * focus_dist;
         let viewport_height = 2.0 * h;
         let viewport_width = viewport_height * (image_width as f64) / (image_height as f64);
         eprintln!(
@@ -63,9 +60,15 @@ impl Camera {
 
         // compute camera center and upper-left pixel positions
         let center = lookfrom;
-        let viewport_upper_left =
-            center - (viewport_u / 2.0) - (viewport_v / 2.0) - focal_length * w;
+        let viewport_upper_left = center - (viewport_u / 2.0) - (viewport_v / 2.0) - focus_dist * w;
         let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+
+        let defocus_radius = (defocus_angle / 2.0).to_radians().tan() * focus_dist;
+        let defocus_disk_u = defocus_radius * u;
+        let defocus_disk_v = defocus_radius * v;
+
+        eprintln!("defocus radius {}", defocus_radius);
+        eprintln!("f/{}", focus_dist / (2.0 * defocus_radius));
 
         Self {
             image_width,
@@ -76,9 +79,9 @@ impl Camera {
             pixel_delta_v,
             samples_per_pixel,
             max_depth,
-            u,
-            v,
-            w
+            defocus_angle,
+            defocus_disk_u,
+            defocus_disk_v,
         }
     }
 
@@ -127,8 +130,19 @@ impl Camera {
             + (-0.5 + rand::random::<f64>()) * self.pixel_delta_u
             + (-0.5 + rand::random::<f64>()) * self.pixel_delta_v;
 
-        let ray_direction = pixel_sample - self.center;
+        let ray_origin = if self.defocus_angle <= 0.0 {
+            self.center
+        } else {
+            self.defocus_disk_sample()
+        };
+        let ray_direction = pixel_sample - ray_origin;
 
-        Ray::new(self.center, ray_direction)
+        Ray::new(ray_origin, ray_direction)
+    }
+
+    fn defocus_disk_sample(&self) -> Point {
+        // return a random point in the disk around the camera center
+        let disk = random_in_unit_disk();
+        self.center + disk.x * self.defocus_disk_u + disk.y * self.defocus_disk_v
     }
 }

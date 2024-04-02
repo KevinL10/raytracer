@@ -1,5 +1,3 @@
-use rand::seq::index;
-
 use crate::color::Color;
 use crate::hittable::HitRecord;
 use crate::ray::{Ray, ScatteredRay};

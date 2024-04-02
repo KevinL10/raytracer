@@ -16,7 +16,7 @@ use crate::color::Color;
 use crate::material::{Lambertian, Material, Metal};
 use crate::objects::HittableList;
 use crate::objects::Sphere;
-use crate::vec3::Point;
+use crate::vec3::{Point, Vec3};
 
 fn main() {
     // aspect ratio: width / height;
@@ -25,15 +25,27 @@ fn main() {
 
     // camera settings
     let vfov = 30.0; // vertical view angle
-    let samples_per_pixel = 30;
+    let samples_per_pixel = 20;
     // max number of ray bounces
     let max_depth = 10;
+    let lookfrom = Point::new(-2.0, 2.0, 1.0);
+    let lookat = Point::new(0.0, 0.0, -1.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let defocus_angle: f64 = 10.0;
+
+    // for our raytracer, focus_dist is the same as focal_length
+    let focus_dist = 3.4; 
     let camera = Camera::new(
         aspect_ratio,
         image_width,
         vfov,
         samples_per_pixel,
         max_depth,
+        lookfrom,
+        lookat,
+        vup,
+        defocus_angle,
+        focus_dist,
     );
 
     // create materials

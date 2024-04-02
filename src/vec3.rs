@@ -1,4 +1,4 @@
-use rand::{seq::index, Rng};
+use rand::Rng;
 use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
 
 #[derive(PartialEq, Debug, Clone, Copy)]
@@ -44,6 +44,15 @@ impl Vec3 {
     }
 
     pub fn random_range(min: f64, max: f64) -> Vec3 {
+        let mut rng = rand::thread_rng();
+        Vec3 {
+            x: rng.gen_range(min..=max),
+            y: rng.gen_range(min..=max),
+            z: rng.gen_range(min..=max),
+        }
+    }
+
+    pub fn random_disk(min: f64, max: f64) -> Vec3 {
         let mut rng = rand::thread_rng();
         Vec3 {
             x: rng.gen_range(min..=max),
@@ -180,6 +189,16 @@ fn random_in_unit_sphere() -> Vec3 {
 
 pub fn random_unit_vector() -> Vec3 {
     random_in_unit_sphere().unit()
+}
+
+pub fn random_in_unit_disk() -> Vec3 {
+    let mut rng = rand::thread_rng();
+    loop {
+        let p = Vec3::new(rng.gen_range(-1.0..=1.0), rng.gen_range(-1.0..=1.0), 0.0);
+        if p.length() < 1.0 {
+            return p;
+        }
+    }
 }
 
 #[allow(dead_code)]
