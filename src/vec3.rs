@@ -1,4 +1,4 @@
-use rand::Rng;
+use rand::{seq::index, Rng};
 use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
 
 #[derive(PartialEq, Debug, Clone, Copy)]
@@ -149,6 +149,22 @@ impl Mul<Vec3> for f64 {
 }
 
 // useful functions
+
+// produce the vector when the ray hits a mirror reflective surface
+// assumes that direction and normal are unit vectors
+pub fn reflect(direction: Vec3, normal: Vec3) -> Vec3 { 
+    direction + 2.0 * normal * Vec3::dot(-direction, normal)
+} 
+
+pub fn refract(direction: Vec3, normal: Vec3, refraction_ratio: f64) -> Vec3 {
+    let cos_theta = Vec3::dot(direction, -normal);
+    let r_perp = refraction_ratio * (direction + cos_theta * normal);
+    let r_parallel  = -normal * (1.0 - r_perp.length().powf(2.0)).sqrt();
+
+
+    r_perp + r_parallel
+}
+
 
 // note: we first sample points from within the sphere and then
 // normalize them. We do this to avoid oversampling from points

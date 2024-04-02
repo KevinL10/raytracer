@@ -1,7 +1,7 @@
 use crate::color::Color;
 use crate::hittable::HitRecord;
 use crate::ray::{Ray, ScatteredRay};
-use crate::vec3::{random_unit_vector, Vec3};
+use crate::vec3::{random_unit_vector, reflect, refract, Vec3};
 
 pub trait Material {
     // describe the scattered ray (ray and attenuation color) off of the
@@ -59,13 +59,63 @@ impl Metal {
 impl Material for Metal {
     fn scatter(&self, ray: Ray, hit_record: &HitRecord) -> Option<ScatteredRay> {
         // mirror the ray that hits the object against the normal of the hit
-        let reflected = ray.direction.unit()
-            - 2.0 * hit_record.normal * Vec3::dot(ray.direction.unit(), hit_record.normal)
-            + self.fuzz * random_unit_vector();
+        let reflected =
+            reflect(ray.direction.unit(), hit_record.normal) + self.fuzz * random_unit_vector();
 
         Some(ScatteredRay {
             ray: Ray::new(hit_record.point, reflected),
             attenuation: self.albedo,
+        })
+    }
+}
+
+pub struct Dielectric {
+    ref_index: f64,
+}
+
+impl Dielectric {
+    pub fn new(ref_index: f64) -> Self {
+        Self {
+            ref_index
+        }
+    }
+
+    fn reflectance(cosine: f64, ref_index: f64) -> f64 {
+        let r0 = ((1.0 - ref_index) / (1.0 + ref_index)).powf(2.0);
+        r0 + (1.0 - r0) * (1.0 - cosine).powf(5.0)
+    }
+}
+
+impl Material for Dielectric {
+
+    fn scatter(&self, ray: Ray, hit_record: &HitRecord) -> Option<ScatteredRay> {
+        // when the ray intersects on the front face, the ratio will be
+        // that of outside air (1.0) to the material (self.ref_index)
+        let unit_direction = ray.direction.unit();
+        let cos_theta = Vec3::dot(unit_direction, -hit_record.normal);
+        let sin_theta = (1.0 - cos_theta.powf(2.0)).sqrt();
+
+        let refraction_ratio = if hit_record.front_face {
+            1.0 / self.ref_index
+        } else {
+            self.ref_index
+        };
+
+        // if the incident angle exceeds the critical angle, the ray will
+        // completely reflect. otherwise, the ray partially reflects/refracts
+        // with probability given by Shlick's approximation
+        let cannot_refract = sin_theta * refraction_ratio > 1.0;
+
+        let direction = if cannot_refract || (Dielectric::reflectance(cos_theta, self.ref_index) > rand::random()) {
+            // eprintln!("reflected");
+            reflect(unit_direction, hit_record.normal)
+        } else {
+            refract(unit_direction, hit_record.normal, refraction_ratio)
+        };
+
+        Some(ScatteredRay {
+            ray: Ray::new(hit_record.point, direction),
+            attenuation: Color::new(1.0, 1.0, 1.0),
         })
     }
 }
