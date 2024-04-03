@@ -7,6 +7,7 @@ use crate::vec3::{random_in_unit_disk, Point, Vec3};
 use rayon::prelude::*;
 use std::f64::INFINITY;
 use std::io;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 pub struct Camera {
     image_width: i32,
@@ -95,9 +96,9 @@ impl Camera {
             vec![Color::new(0.0, 0.0, 0.0); self.image_width as usize];
             self.image_height as usize
         ];
+        let lines_scanned = AtomicUsize::new(0);
 
         pixels.par_iter_mut().enumerate().for_each(|(i, row)| {
-            eprintln!("Scanlines remaining: {}", self.image_height - i as i32);
             for j in 0..self.image_width {
                 let mut agg_pixel_color = Color::new(0.0, 0.0, 0.0);
                 for _ in 0..self.samples_per_pixel {
@@ -106,6 +107,8 @@ impl Camera {
                 }
                 row[j as usize] = agg_pixel_color;
             }
+            let cnt = lines_scanned.fetch_add(1, Ordering::SeqCst) + 1; // fetch_add returns the previous value
+            eprintln!("Scanlines remaining: {}", self.image_height - cnt as i32);
         });
 
         for i in 0..self.image_height {

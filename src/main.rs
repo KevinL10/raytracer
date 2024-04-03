@@ -21,7 +21,7 @@ use crate::vec3::{Point, Vec3};
 fn basic_world() {
     // aspect ratio: width / height;
     let aspect_ratio = 16.0 / 9.0;
-    let image_width = 400;
+    let image_width = 1200;
 
     // camera settings
     let vfov = 30.0; // vertical view angle
@@ -184,6 +184,106 @@ fn book_cover() {
     camera.render(&world);
 }
 
+fn pool_table() {
+    // pool table with solid colors, low-angle shot
+    // inner table spans x-axis (-8, 8) and z-axis (-4, 4)
+    let blue: Arc<dyn Material> = Arc::new(Lambertian::new(Color::new(0.1, 0.1, 0.8)));
+    let brown: Arc<dyn Material> = Arc::new(Lambertian::new(Color::new(0.3, 0.16, 0.09)));
+    let rail_green: Arc<dyn Material> = Arc::new(Lambertian::new(Color::new(0.0, 0.3, 0.1)));
+    let white: Arc<dyn Material> = Arc::new(Lambertian::new(Color::new(0.08, 0.34, 0.26)));
+
+    let ball_colors: Vec<Arc<dyn Material>> = vec![
+        Arc::new(Lambertian::new(Color::new(0.7, 0.0, 0.0))), // red
+        Arc::new(Lambertian::new(Color::new(0.0, 0.17, 0.7))), // blue
+        Arc::new(Lambertian::new(Color::new(1.0, 0.6, 0.7))), // orange
+        Arc::new(Lambertian::new(Color::new(0.0, 0.6, 0.2))), // green
+    ];
+
+    let mut world = HittableList::new();
+    // floor
+    world.add(Arc::new(Sphere::new(
+        Point::new(0.0, -1000.0, 0.0),
+        1000.0,
+        Arc::clone(&rail_green)
+    )));
+
+    // balls
+    for color in ball_colors.iter() {
+        world.add(Arc::new(Sphere::new(
+            Point::new(
+                -6.0 * (rand::random::<f64>() * 2.0 - 1.0),
+                0.5,
+                -2.0 * (rand::random::<f64>() * 2.0 - 1.0),
+            ),
+            0.5,
+            Arc::clone(&color),
+        )));
+    }
+
+    // white ball
+    world.add(Arc::new(Sphere::new(
+        Point::new(2.0, 0.5, 0.0),
+        0.5,
+        Arc::clone(&white),
+    )));
+
+    // table top rail (formed from adjacent spheres of radius 0.7)
+    let rail_radius = 0.7;
+    let rail_spacing = 0.2;
+    for i in (1.0 / rail_spacing) as i32..(8.0 / rail_spacing) as i32 {
+        world.add(Arc::new(Sphere::new(
+            Point::new(-8.0 + rail_spacing * i as f64, rail_radius, -4.0),
+            rail_radius,
+            Arc::clone(&rail_green),
+        )));
+    }
+
+    // table left rail (formed from adjacent spheres of radius 0.7)
+    for i in (1.0 / rail_spacing) as i32..(8.0 / rail_spacing) as i32 {
+        world.add(Arc::new(Sphere::new(
+            Point::new(-8.0, rail_radius, -4.0 + rail_spacing * i as f64),
+            rail_radius,
+            Arc::clone(&rail_green),
+        )));
+    }
+
+    let aspect_ratio = 16.0 / 9.0;
+    let image_width = 400;
+
+    // camera settings
+    let vfov = 20.0;
+    let samples_per_pixel = 100;
+    // max number of ray bounces
+    let max_depth = 10;
+    // look from center-right to the top left pocket
+    let lookfrom = Point::new(8.0, 1.5, 2.0);
+    let lookat = Point::new(2.0, 0.5, 0.0);
+
+    // DEBUG: camera from high up
+    // let lookfrom = Point::new(0.0, 10.0, 1.0);
+    // let lookat = Point::new(0.0, 0.0, 0.0);
+
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let defocus_angle: f64 = 0.0;
+
+    // for our raytracer, focus_dist is the same as focal_length
+    let focus_dist = 10.0;
+
+    let camera = Camera::new(
+        aspect_ratio,
+        image_width,
+        vfov,
+        samples_per_pixel,
+        max_depth,
+        lookfrom,
+        lookat,
+        vup,
+        defocus_angle,
+        focus_dist,
+    );
+    camera.render(&world);
+}
+
 fn main() {
-    basic_world();
+    pool_table();
 }
