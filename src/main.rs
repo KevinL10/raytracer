@@ -7,7 +7,7 @@ mod objects;
 mod ray;
 mod vec3;
 
-use std::rc::Rc;
+use std::sync::Arc;
 
 use material::Dielectric;
 
@@ -25,7 +25,7 @@ fn basic_world() {
 
     // camera settings
     let vfov = 30.0; // vertical view angle
-    let samples_per_pixel = 20;
+    let samples_per_pixel = 200;
     // max number of ray bounces
     let max_depth = 10;
     let lookfrom = Point::new(-2.0, 2.0, 1.0);
@@ -49,44 +49,44 @@ fn basic_world() {
     );
 
     // create materials
-    let center: Rc<dyn Material> = Rc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
-    let ground: Rc<dyn Material> = Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
-    let left: Rc<dyn Material> = Rc::new(Dielectric::new(1.5));
-    let right: Rc<dyn Material> = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 0.1));
+    let center: Arc<dyn Material> = Arc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
+    let ground: Arc<dyn Material> = Arc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
+    let left: Arc<dyn Material> = Arc::new(Dielectric::new(1.5));
+    let right: Arc<dyn Material> = Arc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 0.1));
 
-    let high: Rc<dyn Material> = Rc::new(Metal::new(Color::new(0.8, 0.8, 0.8), 0.1));
+    let high: Arc<dyn Material> = Arc::new(Metal::new(Color::new(0.8, 0.8, 0.8), 0.1));
 
     // create objects
     let mut world = HittableList::new();
-    world.add(Rc::new(Sphere::new(
+    world.add(Arc::new(Sphere::new(
         Point::new(0.0, 0.0, -1.0),
         0.5,
-        Rc::clone(&center),
+        Arc::clone(&center),
     )));
-    world.add(Rc::new(Sphere::new(
+    world.add(Arc::new(Sphere::new(
         Point::new(-1.0, 0.0, -1.0),
         -0.4,
-        Rc::clone(&left),
+        Arc::clone(&left),
     )));
-    world.add(Rc::new(Sphere::new(
+    world.add(Arc::new(Sphere::new(
         Point::new(-1.0, 0.0, -1.0),
         0.5,
-        Rc::clone(&left),
+        Arc::clone(&left),
     )));
-    world.add(Rc::new(Sphere::new(
+    world.add(Arc::new(Sphere::new(
         Point::new(1.0, 0.0, -1.0),
         0.5,
-        Rc::clone(&right),
+        Arc::clone(&right),
     )));
-    world.add(Rc::new(Sphere::new(
+    world.add(Arc::new(Sphere::new(
         Point::new(3.0, 3.0, -5.0),
         1.0,
-        Rc::clone(&high),
+        Arc::clone(&high),
     )));
-    world.add(Rc::new(Sphere::new(
+    world.add(Arc::new(Sphere::new(
         Point::new(0.0, -100.5, -1.0),
         100.0,
-        Rc::clone(&ground),
+        Arc::clone(&ground),
     )));
 
     camera.render(&world);
@@ -94,10 +94,10 @@ fn basic_world() {
 
 fn book_cover() {
     let mut world = HittableList::new();
-    world.add(Rc::new(Sphere::new(
+    world.add(Arc::new(Sphere::new(
         Point::new(0.0, -1000.0, 0.0),
         1000.0,
-        Rc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5))),
+        Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5))),
     )));
 
     for a in -11..=11 {
@@ -113,46 +113,46 @@ fn book_cover() {
                 if choose_mat < 0.8 {
                     // diffuse
                     let albedo = Vec3::random() * Vec3::random();
-                    world.add(Rc::new(Sphere::new(
+                    world.add(Arc::new(Sphere::new(
                         center,
                         0.2,
-                        Rc::new(Lambertian::new(albedo)),
+                        Arc::new(Lambertian::new(albedo)),
                     )));
                 } else if choose_mat < 0.95 {
                     // metal
                     let albedo = Vec3::random_range(0.5, 1.0);
                     let fuzz = rand::random::<f64>() / 2.0;
-                    world.add(Rc::new(Sphere::new(
+                    world.add(Arc::new(Sphere::new(
                         center,
                         0.2,
-                        Rc::new(Metal::new(albedo, fuzz)),
+                        Arc::new(Metal::new(albedo, fuzz)),
                     )));
                 } else {
                     // glass
-                    world.add(Rc::new(Sphere::new(
+                    world.add(Arc::new(Sphere::new(
                         center,
                         0.2,
-                        Rc::new(Dielectric::new(1.5)),
+                        Arc::new(Dielectric::new(1.5)),
                     )));
                 }
             }
         }
     }
 
-    world.add(Rc::new(Sphere::new(
+    world.add(Arc::new(Sphere::new(
         Point::new(0.0, 1.0, 0.0),
         1.0,
-        Rc::new(Dielectric::new(1.5)),
+        Arc::new(Dielectric::new(1.5)),
     )));
-    world.add(Rc::new(Sphere::new(
+    world.add(Arc::new(Sphere::new(
         Point::new(-4.0, 1.0, 0.0),
         1.0,
-        Rc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1))),
+        Arc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1))),
     )));
-    world.add(Rc::new(Sphere::new(
+    world.add(Arc::new(Sphere::new(
         Point::new(4.0, 1.0, 0.0),
         1.0,
-        Rc::new(Metal::new(Color::new(0.4, 0.2, 0.1), 0.0)),
+        Arc::new(Metal::new(Color::new(0.4, 0.2, 0.1), 0.0)),
     )));
 
     let aspect_ratio = 16.0 / 9.0;
@@ -185,5 +185,5 @@ fn book_cover() {
 }
 
 fn main() {
-    book_cover();
+    basic_world();
 }

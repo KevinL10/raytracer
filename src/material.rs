@@ -3,7 +3,7 @@ use crate::hittable::HitRecord;
 use crate::ray::{Ray, ScatteredRay};
 use crate::vec3::{random_unit_vector, reflect, refract, Vec3};
 
-pub trait Material {
+pub trait Material: Send + Sync {
     // describe the scattered ray (ray and attenuation color) off of the
     // material, given an incident ray with hit_record hit
     fn scatter(&self, ray: Ray, hit_record: &HitRecord) -> Option<ScatteredRay>;

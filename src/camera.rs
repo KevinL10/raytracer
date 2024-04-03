@@ -4,6 +4,7 @@ use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::vec3::{random_in_unit_disk, Point, Vec3};
 
+use rayon::prelude::*;
 use std::f64::INFINITY;
 use std::io;
 
@@ -88,20 +89,36 @@ impl Camera {
     pub fn render(&self, world: &dyn Hittable) {
         println!("P3\n{} {}\n255", self.image_width, self.image_height);
 
-        for i in 0..self.image_height {
-            eprintln!("Scanlines remaining: {}", self.image_height - i);
+        let start = std::time::Instant::now();
+
+        let mut pixels = vec![
+            vec![Color::new(0.0, 0.0, 0.0); self.image_width as usize];
+            self.image_height as usize
+        ];
+
+        pixels.par_iter_mut().enumerate().for_each(|(i, row)| {
+            eprintln!("Scanlines remaining: {}", self.image_height - i as i32);
             for j in 0..self.image_width {
                 let mut agg_pixel_color = Color::new(0.0, 0.0, 0.0);
                 for _ in 0..self.samples_per_pixel {
-                    let ray = self.get_ray(i, j);
+                    let ray = self.get_ray(i as i32, j);
                     agg_pixel_color += Camera::ray_color(ray, self.max_depth, world);
                 }
+                row[j as usize] = agg_pixel_color;
+            }
+        });
 
-                write_color(io::stdout(), agg_pixel_color, self.samples_per_pixel);
+        for i in 0..self.image_height {
+            for j in 0..self.image_width {
+                write_color(
+                    io::stdout(),
+                    pixels[i as usize][j as usize],
+                    self.samples_per_pixel,
+                );
             }
         }
 
-        eprintln!("Finished.");
+        eprintln!("Finished in {:?} seconds", start.elapsed());
     }
 
     fn ray_color(ray: Ray, depth: i32, world: &dyn Hittable) -> Color {
