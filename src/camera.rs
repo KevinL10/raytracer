@@ -140,7 +140,12 @@ impl Camera {
         };
 
         let y = 0.5 * (ray.direction.unit().y + 1.0);
+        
+
+        // blue sky 
         Color::new(1.0, 1.0, 1.0) * (1.0 - y) + Color::new(0.5, 0.7, 1.0) * y
+        // sunset
+        // Color::new(1.0, 1.0, 1.0) * (1.0 - y) + Color::new(0.93, 0.69, 0.38) * y
     }
 
     fn get_ray(&self, i: i32, j: i32) -> Ray {

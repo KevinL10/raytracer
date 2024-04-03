@@ -10,6 +10,7 @@ mod vec3;
 use std::sync::Arc;
 
 use material::Dielectric;
+use rand::Rng;
 
 use crate::camera::Camera;
 use crate::color::Color;
@@ -204,7 +205,7 @@ fn pool_table() {
     world.add(Arc::new(Sphere::new(
         Point::new(0.0, -1000.0, 0.0),
         1000.0,
-        Arc::clone(&rail_green)
+        Arc::clone(&rail_green),
     )));
 
     // balls
@@ -284,6 +285,78 @@ fn pool_table() {
     camera.render(&world);
 }
 
+fn spheres() {
+    let mut world = HittableList::new();
+    let mut rng = rand::thread_rng();
+
+    // floor
+    let sphere_mat = Arc::new(Metal::new(Color::new(0.5, 0.5, 0.5), 0.0));
+
+    world.add(Arc::new(Sphere::new(
+        Point::new(0.0, -1000.0, 0.0),
+        1000.0,
+        sphere_mat,
+    )));
+
+    let aspect_ratio = 16.0 / 9.0;
+    let image_width = 1200;
+
+    // camera settings
+    let vfov = 40.0;
+    let samples_per_pixel = 500;
+    // max number of ray bounces
+    let max_depth = 10;
+    let lookfrom = Point::new(6.0, 2.0, 7.0);
+    let lookat = Point::new(0.0, 1.0, 0.0);
+
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let defocus_angle: f64 = 1.0;
+
+    // for our raytracer, focus_dist is the same as focal_length
+    let focus_dist = 4.0;
+
+    let camera = Camera::new(
+        aspect_ratio,
+        image_width,
+        vfov,
+        samples_per_pixel,
+        max_depth,
+        lookfrom,
+        lookat,
+        vup,
+        defocus_angle,
+        focus_dist,
+    );
+
+    let spacing = 3.0;
+    for i in -4..=4 {
+        for j in -4..=4 {
+            let sphere_radius = rng.gen_range(0.2..=1.0);
+            let mat_prob = rng.gen_range(0.0..=1.0);
+            let center = Point::new(
+                i as f64 * spacing + rng.gen_range(-1.0..=1.0),
+                sphere_radius,
+                j as f64 * spacing + rng.gen_range(-1.0..=1.0),
+            );
+            if (center - lookfrom).length() > 1.0 {
+                let color = Color::new(
+                    rng.gen_range(0.4..1.0),
+                    rng.gen_range(0.4..1.0),
+                    rng.gen_range(0.4..1.0),
+                );
+                let material: Arc<dyn Material> = if mat_prob < 0.7 {
+                    Arc::new(Metal::new(color, 0.0))
+                } else {
+                    Arc::new(Lambertian::new(color))
+                };
+
+                world.add(Arc::new(Sphere::new(center, sphere_radius, material)));
+            }
+        }
+    }
+    camera.render(&world);
+}
+
 fn main() {
-    pool_table();
+    spheres();
 }
