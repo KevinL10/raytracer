@@ -299,7 +299,7 @@ fn spheres() {
     )));
 
     let aspect_ratio = 16.0 / 9.0;
-    let image_width = 1200;
+    let image_width = 800;
 
     // camera settings
     let vfov = 40.0;
@@ -310,7 +310,7 @@ fn spheres() {
     let lookat = Point::new(0.0, 1.0, 0.0);
 
     let vup = Vec3::new(0.0, 1.0, 0.0);
-    let defocus_angle: f64 = 1.0;
+    let defocus_angle: f64 = 0.0;
 
     // for our raytracer, focus_dist is the same as focal_length
     let focus_dist = 4.0;
@@ -328,7 +328,7 @@ fn spheres() {
         focus_dist,
     );
 
-    let spacing = 3.0;
+    let spacing = 2.5;
     for i in -4..=4 {
         for j in -4..=4 {
             let sphere_radius = rng.gen_range(0.2..=1.0);
@@ -344,7 +344,7 @@ fn spheres() {
                     rng.gen_range(0.4..1.0),
                     rng.gen_range(0.4..1.0),
                 );
-                let material: Arc<dyn Material> = if mat_prob < 0.7 {
+                let material: Arc<dyn Material> = if mat_prob < 0.4 {
                     Arc::new(Metal::new(color, 0.0))
                 } else {
                     Arc::new(Lambertian::new(color))

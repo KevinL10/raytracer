@@ -143,7 +143,7 @@ impl Camera {
         
 
         // blue sky 
-        Color::new(1.0, 1.0, 1.0) * (1.0 - y) + Color::new(0.5, 0.7, 1.0) * y
+        Color::new(1.0, 1.0, 1.0) * (1.0 - y) + Color::new(0.4, 0.6, 1.0) * y
         // sunset
         // Color::new(1.0, 1.0, 1.0) * (1.0 - y) + Color::new(0.93, 0.69, 0.38) * y
     }
