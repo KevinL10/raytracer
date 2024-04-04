@@ -191,13 +191,13 @@ fn pool_table() {
     let blue: Arc<dyn Material> = Arc::new(Lambertian::new(Color::new(0.1, 0.1, 0.8)));
     let brown: Arc<dyn Material> = Arc::new(Lambertian::new(Color::new(0.3, 0.16, 0.09)));
     let rail_green: Arc<dyn Material> = Arc::new(Lambertian::new(Color::new(0.0, 0.3, 0.1)));
-    let white: Arc<dyn Material> = Arc::new(Lambertian::new(Color::new(0.08, 0.34, 0.26)));
+    let white: Arc<dyn Material> = Arc::new(Lambertian::new(Color::new(1.0, 1.0, 1.0)));
 
     let ball_colors: Vec<Arc<dyn Material>> = vec![
         Arc::new(Lambertian::new(Color::new(0.7, 0.0, 0.0))), // red
-        Arc::new(Lambertian::new(Color::new(0.0, 0.17, 0.7))), // blue
-        Arc::new(Lambertian::new(Color::new(1.0, 0.6, 0.7))), // orange
-        Arc::new(Lambertian::new(Color::new(0.0, 0.6, 0.2))), // green
+        Arc::new(Dielectric::new(1.5)),                       // blue
+        Arc::new(Lambertian::new(Color::new(1.0, 0.6, 0.0))), // orange
+        Arc::new(Metal::new(Color::new(0.1, 0.0, 0.6), 0.1)), // blue
     ];
 
     let mut world = HittableList::new();
@@ -253,7 +253,7 @@ fn pool_table() {
 
     // camera settings
     let vfov = 20.0;
-    let samples_per_pixel = 100;
+    let samples_per_pixel = 500;
     // max number of ray bounces
     let max_depth = 10;
     // look from center-right to the top left pocket
@@ -265,10 +265,10 @@ fn pool_table() {
     // let lookat = Point::new(0.0, 0.0, 0.0);
 
     let vup = Vec3::new(0.0, 1.0, 0.0);
-    let defocus_angle: f64 = 0.0;
+    let defocus_angle: f64 = 2.0;
 
     // for our raytracer, focus_dist is the same as focal_length
-    let focus_dist = 10.0;
+    let focus_dist = 6.0;
 
     let camera = Camera::new(
         aspect_ratio,
@@ -358,5 +358,5 @@ fn spheres() {
 }
 
 fn main() {
-    spheres();
+    basic_world()
 }

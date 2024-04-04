@@ -1,3 +1,4 @@
 # Raytracing in Rust
 
-![Basic](/static/basic.jpg)
+![World of spheres](/static/raytracing.jpg)
+![Defocus and camera](/static/basic.jpg)
